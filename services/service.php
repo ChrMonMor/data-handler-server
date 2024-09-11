@@ -1,29 +1,32 @@
 <?php
-enum Sensors: int
-{
+enum Sensors: int {
     case Temperatur = 0;
     case Humidity = 1;
     case Loudness = 2;
     case AirQuality = 3;
     // etc.
 }
-
-enum ControllerType: int
-{
+enum ControllerType: int {
     case Sensor = 0;
     case Alarm = 1;
     case Server = 2;
     case Database = 3;
 }
+enum APIMethod: int {
+    case GET = 0;
+    case POST = 1;
+    case PUT = 2;
+    case DELETE = 3;
+}
 function CallAPI(string $method, string $url){
-    $curl = curl_init();
-
+    $curl = curl_init($url);
     curl_setopt($curl, CURLOPT_URL, $url);
+    curl_setopt($curl, CURLOPT_NOSIGNAL, 1);
+    curl_setopt($curl, CURLOPT_TIMEOUT_MS, 1000);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    if($method == "POST"){
+    if($method == APIMethod::POST->name){
         curl_setopt($curl, CURLOPT_POST, 1);
     }
-
     try {
         $resp = curl_exec($curl);
         $result = json_decode($resp);
@@ -32,7 +35,6 @@ function CallAPI(string $method, string $url){
         echo $th;
     }
     curl_close($curl);
-    
 }
 
 class Varibles {
@@ -84,33 +86,84 @@ class Varibles {
 }
 
 function AlertFilter(Varibles $var, int $sensor, int $messure) {
-   switch ($sensor) {
-      case Sensors::Temperatur:
-         echo "Your favorite color is red!";
-         break;
-      case Sensors::Humidity:
-         echo "Your favorite color is blue!";
-         break;
-      case Sensors::Loudness:
-         echo "Your favorite color is green!";
-         break;
-      case Sensors::AirQuality:
-          echo "Your favorite color is green!";
-           break;
+    switch ($sensor) {
+        case Sensors::Temperatur:
+            TemperatureLimits($var, $messure);
+            break;
+        case Sensors::Humidity:
+            HumidityLimits($var, $messure);
+            break;
+        case Sensors::Loudness:
+            LoudnessLimits($var, $messure);
+            break;
+        case Sensors::AirQuality:
+            AirQualityLimits($var, $messure);
+            break;
    }
 }
 
 function TemperatureLimits(Varibles $var, $messure){
-        CallAlarms("temps", 1);
+    $currentTime = date("H:i:s");
+    // work hours
+    if ($currentTime > $var->start_time && $currentTime < $var->end_time){
+        if($messure < $var->temperature_low){
+            CallAlarms("temps", 0);
+        }
+        if($messure > $var->temperature_high){
+            CallAlarms("temps", 1);
+        }
+    } else {
+        if($messure < $var->temperature_low_after){
+            CallAlarms("temps", 0);
+        }
+        if($messure > $var->temperature_high_after){
+            CallAlarms("temps", 1);
+        }
+    }
 }
 function HumidityLimits(Varibles $var, $messure){
-        CallAlarms("humid", 1);
+    
+    $currentTime = date("H:i:s");
+    // work hours
+    if ($currentTime > $var->start_time && $currentTime < $var->end_time){
+        if($messure > $var->humidity_medium && $messure < $var->humidity_high){
+            CallAlarms("humid", 1);
+        }
+        if($messure > $var->temperature_high){
+            CallAlarms("humid", 2);
+        }
+    } else {
+        if($messure > $var->humidity_medium_after && $messure < $var->humidity_high_after){
+            CallAlarms("humid", 1);
+        }
+        if($messure > $var->temperature_high_after){
+            CallAlarms("humid", 2);
+        }
+    }
 }
 function LoudnessLimits(Varibles $var, $messure){
-        CallAlarms("loud", 1);
+    $currentTime = date("H:i:s");
+    // work hours
+    if ($currentTime > $var->start_time && $currentTime < $var->end_time){
+        if($messure > $var->noise_medium && $messure < $var->noise_high){
+            CallAlarms("loud", 1);
+        }
+        if($messure > $var->noise_high){
+            CallAlarms("loud", 2);
+        }
+    }
 }
 function AirQualityLimits(Varibles $var, $messure){
-        CallAlarms("AirQ", 1);
+    $currentTime = date("H:i:s");
+    // work hours
+    if ($currentTime > $var->start_time && $currentTime < $var->end_time){
+        if($messure > $var->airquality_medium && $messure < $var->airquality_high){
+            CallAlarms("AirQ", 1);
+        }
+        if($messure > $var->airquality_high){
+            CallAlarms("AirQ", 2);
+        }
+    }
 }
 function CallAlarmServers(string $url) {
         $curl = curl_init();
@@ -139,8 +192,10 @@ function CallAlarms(string $what, int $type) {
         print_r($arr);
         foreach ($arr as $x) {
             $var = $x[0].'?type='.$type.'&where="'.$x[1].'"&what="'.$what.'"';
-                CallAlarmServers($var);
+                CallAPI(APIMethod::GET->name, $var);
         }
 }
 $var = new Varibles();
 TemperatureLimits($var, 1);
+
+?>
