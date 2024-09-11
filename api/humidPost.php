@@ -3,8 +3,8 @@
             
         require_once '../config.php';
         
-        $sql = "INSERT INTO `humidData` (`readings`) VALUES ('".$_POST['readings']."')";
-
+        
+        $sql = "INSERT INTO `tempData` (`readings`, ip) VALUES ('".$_POST['readings']."', '".$_POST['ip']."')";
         try {
 
             $pdo->exec($sql);

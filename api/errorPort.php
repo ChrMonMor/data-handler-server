@@ -3,7 +3,8 @@
             
         require_once '../config.php';
         
-        $sql = "INSERT INTO `tempData` (`readings`, ip) VALUES ('".$_POST['readings']."', '".$_POST['ip']."')";
+        $sql = "INSERT INTO `errorData` (`ip`, `sensor`, `description`) VALUES ('".$_POST['ip']."', '".$_POST['sensor']."', '".$_POST['description']."')";
+
         try {
 
             $pdo->exec($sql);
@@ -22,7 +23,7 @@
     if($_SERVER['REQUEST_METHOD'] == 'GET'){
         require_once "../config.php";
 
-        $sql = "SELECT * FROM `airqData`";
+        $sql = "SELECT * FROM `errorData`";
         $data = [];
 
         try {
@@ -42,10 +43,8 @@
             echo json_encode($ex->getMessage());
 
         } finally {
-                
             unset($stmt);
             unset($pdo);
-
         }    
     }
 ?>

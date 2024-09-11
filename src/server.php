@@ -1,9 +1,11 @@
 <?php 
     class server {
 
+        public $serverVaribles;
+
         public function __construct()
         {
-            
+            $serverVaribles =  new varibles();
         }
 
         public function createSocket():Socket {
