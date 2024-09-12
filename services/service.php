@@ -87,6 +87,7 @@ class Varibles {
 }
 class AlarmClass{
         public function AlertFilter(Varibles $var, SensorModel $sensor, int $messure, $ip) {
+        public static function AlertFilter(Varibles $var, SensorModel $sensor, int $messure, $ip) {
         switch ($sensor->sensor) {
             case Sensors::Temperatur:
                 $b = AlarmClass::TemperatureLimits($var, $messure);
@@ -247,6 +248,7 @@ class AlarmClass{
 
 class ErrorClass{
     public function HasErrorOccured(SensorModel $sensor): bool{
+    public static function HasErrorOccured(SensorModel $sensor): bool{
         $currentTime = date('H:i:s');
         if($sensor->promise > $currentTime){
             ErrorClass::ReportErrorToDatabase($sensor);
@@ -255,6 +257,7 @@ class ErrorClass{
         return false;
     }
     public function ReportErrorToDatabase(SensorModel $sensor){
+    public static function ReportErrorToDatabase(SensorModel $sensor){
         
         require_once '../config.php';
         
