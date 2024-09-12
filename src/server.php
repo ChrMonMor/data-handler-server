@@ -1,27 +1,27 @@
 <?php 
+    require_once "../services/service.php";
+
     class server {
 
         public $serverVaribles;
+        public array $sensors;
 
         public function __construct()
         {
-            $serverVaribles =  new varibles();
+            $this->serverVaribles = new varibles();
+            $this->sensors = array();
         }
 
         public function createSocket():Socket {
                     
             if(($sock = socket_create(AF_INET, SOCK_STREAM, 0)))
             {
-
                 return $sock;
 
             } else {
-                
                 $errorcode = socket_last_error();
                 $errormsg = socket_strerror($errorcode);
-                
                 die("Couldn't create socket: [$errorcode] $errormsg \n");
-            
             }
 
         }
@@ -42,7 +42,7 @@
 
         public function socketListen(Socket $sock) {
             
-            if(!socket_listen ($sock , 10))
+            if(!socket_listen ($sock , 100))
             {
                 $errorcode = socket_last_error();
                 $errormsg = socket_strerror($errorcode);

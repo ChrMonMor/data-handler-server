@@ -5,9 +5,12 @@
         
         
         $sql = "INSERT INTO `tempData` (`readings`, ip) VALUES ('".$_POST['readings']."', '".$_POST['ip']."')";
+
         try {
 
             $pdo->exec($sql);
+
+            
 
         } catch (Exception $ex) {
 
