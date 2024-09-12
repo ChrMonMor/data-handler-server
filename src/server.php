@@ -6,8 +6,7 @@
         public $serverVaribles;
         public array $sensors;
 
-        public function __construct()
-        {
+        public function __construct() {
             $this->serverVaribles = new varibles();
             $this->sensors = array();
         }
@@ -73,6 +72,27 @@
             
             //read data from the incoming socket
             if(($input = socket_read($client, 1024000))){
+                
+                $str_arr = explode ("|", $input); 
+                $readings = $str_arr[0];
+                $ip = $str_arr[1];
+                $type = $str_arr[2];
+                if($type == "".Sensors::Temperatur){
+                    $temp = $this->updateSensorArray($ip, Sensors::Temperatur);
+                    AlarmClass::AlertFilter($this->serverVaribles, $temp, $readings, $ip);
+                }
+                if($type == "".Sensors::Humidity){
+                    $humid = $this->updateSensorArray($ip, Sensors::Humidity);
+                    AlarmClass::AlertFilter($this->serverVaribles, $humid, $readings, $ip);
+                }
+                if($type == "".Sensors::Loudness){
+                    $noise = $this->updateSensorArray($ip, Sensors::Loudness);
+                    AlarmClass::AlertFilter($this->serverVaribles, $noise, $readings, $ip);
+                }
+                if($type == "".Sensors::AirQuality){
+                    $airq = $this->updateSensorArray($ip, Sensors::AirQuality);
+                    AlarmClass::AlertFilter($this->serverVaribles, $airq, $readings, $ip);
+                }
                 return $input;
             }
             return "error";
@@ -85,6 +105,53 @@
             }
             return false;
         }
+
+        public function updateSensorArray($ip, Sensors $type){
+            foreach($this->sensors as $sensor){
+                if($sensor->ip == $ip and $sensor->sensor == $type){
+                    ErrorClass::HasErrorOccured($sensor);
+                    if($type == Sensors::Temperatur){
+                        $sensor = $this->NextPromise($this->serverVaribles->temperature);
+                    }
+                    if($type == Sensors::Humidity){
+                        $sensor = $this->NextPromise($this->serverVaribles->humidity);
+                    }
+                    if($type == Sensors::Loudness){
+                        $sensor = $this->NextPromise($this->serverVaribles->noise);
+                    }
+                    if($type == Sensors::AirQuality){
+                        $sensor = $this->NextPromise($this->serverVaribles->airquality);
+                    }
+                    return $sensor;
+                }
+            }
+            if($type == Sensors::Temperatur){
+                $arr = new SensorModel($ip, $type, $this->serverVaribles->temperature);
+                $this->sensors[] = $arr;
+                return $arr;
+            }
+            if($type == Sensors::Humidity){
+                $arr = new SensorModel($ip, $type, $this->serverVaribles->humidity);
+                $this->sensors[] = $arr;
+                return $arr;
+            }
+            if($type == Sensors::Loudness){
+                $arr = new SensorModel($ip, $type, $this->serverVaribles->noise);
+                $this->sensors[] = $arr;
+                return $arr;
+            }
+            if($type == Sensors::AirQuality){
+                $arr = new SensorModel($ip, $type, $this->serverVaribles->airquality);
+                $this->sensors[] = $arr;
+                return $arr;
+            }
+        }
+        
+        public function NextPromise(int $addTime){
+            $addTime =+ 2;
+            return date('H:i:s', strtotime("+$addTime minutes"));
+        }
+
 
         public function liveServer(Socket $sock){
             

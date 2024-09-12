@@ -7,6 +7,10 @@
         try {
 
             $pdo->exec($sql);
+            
+            $client = new client();
+            $client->sendMessage($_POST['readings'].'|'.$_POST['ip'].'|'.Sensors::AirQuality);
+            $client->closeSocket($client->sock);
 
         } catch (Exception $ex) {
 

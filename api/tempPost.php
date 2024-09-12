@@ -8,6 +8,9 @@
         try {
 
             $pdo->exec($sql);
+            $client = new client();
+            $client->sendMessage($_POST['readings'].'|'.$_POST['ip'].'|'.Sensors::Temperatur);
+            $client->closeSocket($client->sock);
 
         } catch (Exception $ex) {
 
